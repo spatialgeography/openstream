@@ -35,6 +35,7 @@ with st.sidebar:
     project_id = st.text_input("Project ID", value=st.session_state.get("project_id", ""), placeholder="GEE Project ID")
     uploaded_file = st.file_uploader("Service Account JSON", type=["json"])
     st.markdown("🔗 [Get Key](https://console.cloud.google.com/iam-admin/serviceaccounts)")
+    st.markdown("📖 [Get read blog post on hwo to authenticate](https://medium.com/@pulakesh.geo/how-to-authenticate-google-earth-engine-with-streamlit-e62ca7091410)")
 
     if st.button("🚀 Connect to GEE"):
         if not project_id or uploaded_file is None:
@@ -53,6 +54,10 @@ with st.sidebar:
                 st.session_state["project_id"] = project_id
                 st.session_state["ee_initialized"] = True
                 st.success("Connected!")
+                
+                # Added Help Link
+                st.markdown("📖 [Read blog post on how to authenticate](https://medium.com/@pulakesh.geo/how-to-authenticate-google-earth-engine-with-streamlit-e62ca7091410)")
+                
                 st.rerun()
             except Exception as e:
                 st.error(f"Failed: {e}")
