@@ -41,15 +41,12 @@ with st.sidebar:
     
     st.markdown("---")
     
-    # 2. Credentials Input (Fixing the previous error: st.text_area)
+    # 2. File Uploader for Service Account JSON
     st.subheader("Authentication Credentials")
-    st.caption("Paste your Service Account JSON or Client ID details here.")
+    st.caption("Upload your Service Account JSON file.")
     
-    creds_input = st.text_area("JSON Credentials", 
-                                value=st.session_state.get("creds_input", ""), 
-                                height=250,
-                                placeholder='{"type": "service_account", ...}')
-
+    uploaded_file = st.file_uploader("Choose a Service Account JSON file", type=["json"])
+    
     # Added: Link to get the key
     st.markdown("🔗 [Get your Service Account Key](https://console.cloud.google.com/iam-admin/serviceaccounts)")
 
@@ -59,7 +56,15 @@ with st.sidebar:
             st.error("Please enter a Project ID first.")
         else:
             st.session_state["project_id"] = project_id
-            st.session_state["creds_input"] = creds_input
+            
+            # If a file is uploaded, store its content in session state
+            if uploaded_file is not None:
+                try:
+                    file_content = uploaded_file.read().decode("utf-8")
+                    st.session_state["sa_json_content"] = json.loads(file_content)
+                    st.success("JSON Key uploaded successfully!")
+                except Exception as e:
+                    st.error(f"Error reading JSON file: {e}")
             
             # Reset initialization state to force retry
             if "ee_initialized" in st.session_state:
@@ -67,27 +72,27 @@ with st.sidebar:
             st.rerun()
 
 # Use provided credentials or secrets
-def initialize_ee_v3():
-    """Initializes Earth Engine using provided inputs or secrets."""
+def initialize_ee_v4():
+    """Initializes Earth Engine using uploaded file or secrets."""
     current_project = st.session_state.get("project_id") or st.secrets.get("gee", {}).get("project_id")
     
     if not current_project or current_project == "YOUR_PROJECT_ID_HERE":
-        st.info("👋 Welcome! Please enter your **Project ID** and **Credentials** in the sidebar to begin.")
+        st.info("👋 Welcome! Please enter your **Project ID** and **Upload your Service Account JSON** in the sidebar to begin.")
         return False
 
     if "ee_initialized" not in st.session_state:
         try:
-            # 1. Try provided Text Area JSON
-            if st.session_state.get("creds_input"):
-                try:
-                    sa_info = json.loads(st.session_state["creds_input"])
-                    creds = service_account.Credentials.from_service_account_info(sa_info)
-                    ee.Initialize(creds, project=current_project)
-                except json.JSONDecodeError:
-                    st.error("Invalid JSON format in Credentials area. Please paste the full JSON file content.")
-                    return False
+            # 1. Try provided Uploaded JSON Content
+            if st.session_state.get("sa_json_content"):
+                sa_info = st.session_state["sa_json_content"]
+                # Handle potential key formatting issues in newly uploaded files
+                if "private_key" in sa_info and "\\n" in sa_info["private_key"]:
+                    sa_info["private_key"] = sa_info["private_key"].replace("\\n", "\n")
+                
+                creds = service_account.Credentials.from_service_account_info(sa_info)
+                ee.Initialize(creds, project=current_project)
             
-            # 2. Fallback to Secrets.toml
+            # 2. Fallback to Secrets.toml Service Account
             elif "gcp_service_account" in st.secrets:
                 sa_info = dict(st.secrets["gcp_service_account"])
                 if "\\n" in sa_info["private_key"]:
@@ -104,10 +109,11 @@ def initialize_ee_v3():
             return True
         except Exception as e:
             st.error(f"Earth Engine Initialization Failed: {e}")
+            st.info("💡 Ensure the Earth Engine API is enabled and your credentials are correct.")
             return False
     return True
 
-if initialize_ee_v3():
+if initialize_ee_v4():
     st.success(f"Successfully connected to: `{st.session_state.get('current_project')}`")
     
     # Map Controls
@@ -121,7 +127,7 @@ if initialize_ee_v3():
             .median()
         
         vis_params = {'bands': ['B4', 'B3', 'B2'], 'min': 0, 'max': 0.3, 'gamma': 1.4}
-        m = folium.Map(location=[0, 0], zoom_start=2)
+        m = folium.Map(location=[28.6139, 77.2090], zoom_start=10)
         m.add_ee_layer(l8, vis_params, f'Landsat 8 ({year})')
         folium.LayerControl().add_to(m)
         folium_static(m, width=1200)
