@@ -36,7 +36,7 @@ with st.sidebar:
     uploaded_file = st.file_uploader("Service Account JSON", type=["json"])
     
     st.markdown("🔗 [Get Key](https://console.cloud.google.com/iam-admin/serviceaccounts)")
-    st.markdown("📺 [Watch the Tutorial](https://medium.com/@pulakesh.geo/how-to-authenticate-google-earth-engine-with-streamlit-e62ca7091410)")
+    st.markdown("📺 [Watch the Tutorial](https://www.youtube.com/@SpatialGeography)")
 
     if st.button("🚀 Connect to GEE"):
         if not project_id or uploaded_file is None:
