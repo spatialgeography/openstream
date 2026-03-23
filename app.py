@@ -95,7 +95,7 @@ if st.session_state.get("ee_initialized"):
         if state_name: filters.append(ee.Filter.eq('ADM1_NAME', state_name))
         if district_name: filters.append(ee.Filter.eq('ADM2_NAME', district_name))
         
-        roi = gaul.filter(ee.Filter.and_(*filters))
+        roi = gaul.filter(ee.Filter.And(*filters))
         
         # Load Climate Data
         dataset = ee.ImageCollection('IDAHO_EPSCOR/TERRACLIMATE') \
