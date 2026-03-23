@@ -170,12 +170,21 @@ if st.session_state.get("ee_initialized"):
         vis_params = {'min': v_min, 'max': v_max, 'palette': current_palette}
         st.info(f"Visualizing `{variables[selected_var]}` with range [{round(v_min, 1)}, {round(v_max, 1)}]")
 
-        # --- TABS ---
+        # --- MAP & TABS ---
         tab_map, tab_chart, tab_export = st.tabs(["🗺️ Map Viewer", "📈 Trend Analysis", "💾 Export Map"])
         
         with tab_map:
-            center = roi.geometry().centroid().getInfo()['coordinates'][::-1]
-            m = folium.Map(location=center, zoom_start=8)
+            # Safer Map Centering
+            try:
+                roi_count = roi.size().getInfo()
+                if roi_count > 0:
+                    center = roi.geometry().centroid().getInfo()['coordinates'][::-1]
+                    m = folium.Map(location=center, zoom_start=8)
+                else:
+                    st.warning(f"No boundary found for `{selected_district}`. Showing global view.")
+                    m = folium.Map(location=[20, 0], zoom_start=2)
+            except Exception:
+                m = folium.Map(location=[20, 0], zoom_start=2)
             m.add_ee_layer(mean_img, vis_params, f"{selected_district} - {variables[selected_var]}")
             
             folium.GeoJson(
