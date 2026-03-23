@@ -99,7 +99,12 @@ if st.session_state.get("ee_initialized"):
                 def getNDVI(image):
                     return image.normalizedDifference(['B5', 'B4']).rename('NDVI')
                 img = col.map(getNDVI).median()
-                vis_params = {'min': -1, 'max': 1, 'palette': ['blue', 'white', 'green']}
+                # Use a more standard NDVI color palette (Red-Yellow-Green)
+                vis_params = {
+                    'min': -1, 
+                    'max': 1, 
+                    'palette': ['red', 'yellow', 'green']
+                }
 
         elif dataset_choice == "Sentinel-2 (SR)":
             col = ee.ImageCollection("COPERNICUS/S2_SR_HARMONIZED") \
@@ -116,14 +121,22 @@ if st.session_state.get("ee_initialized"):
                 def getNDVI(image):
                     return image.normalizedDifference(['B8', 'B4']).rename('NDVI')
                 img = col.map(getNDVI).median()
-                vis_params = {'min': -1, 'max': 1, 'palette': ['blue', 'white', 'green']}
+                vis_params = {
+                    'min': -1, 
+                    'max': 1, 
+                    'palette': ['red', 'yellow', 'green']
+                }
         
         else: # MODIS
             col = ee.ImageCollection("MODIS/061/MOD13Q1") \
                 .filterBounds(aoi) \
                 .filterDate(start_date.strftime('%Y-%m-%d'), end_date.strftime('%Y-%m-%d'))
             img = col.select('NDVI').median().multiply(0.0001)
-            vis_params = {'min': 0, 'max': 1, 'palette': ['white', 'green']}
+            vis_params = {
+                'min': 0, 
+                'max': 1, 
+                'palette': ['red', 'yellow', 'green']
+            }
 
         # Create Map
         m = folium.Map(location=[lat, lon], zoom_start=zoom, control_scale=True)
