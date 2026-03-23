@@ -56,8 +56,11 @@ with st.sidebar:
                 if "private_key" in sa_info:
                     sa_info["private_key"] = sa_info["private_key"].replace("\\n", "\n")
                 
-                # Initialize EE
-                creds = service_account.Credentials.from_service_account_info(sa_info)
+                # Initialize EE with specific scope
+                SCOPES = ['https://www.googleapis.com/auth/earthengine']
+                creds = service_account.Credentials.from_service_account_info(
+                    sa_info, scopes=SCOPES
+                )
                 ee.Initialize(creds, project=project_id)
                 
                 # Save state
